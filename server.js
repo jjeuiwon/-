@@ -68,7 +68,9 @@ io.on('connection', socket => {
       players: [opponent, entry],
       picks: [null, null],
       selections: [null, null],
-      started: false
+      started: false,
+      round: 1,
+      nextReady: [false, false]
     };
     rooms.set(roomId, room);
     s1.join(roomId); socket.join(roomId);
@@ -95,7 +97,7 @@ io.on('connection', socket => {
 
   socket.on('onlineSelect', payload => {
     const room = rooms.get(socket.data.roomId);
-    if (!room || payload?.room !== room.id || room.started) return;
+    if (!room || payload?.room !== room.id || room.started || (payload?.round && payload.round !== room.round)) return;
     const sideIndex = socket.data.side - 1;
     if (!room.picks[sideIndex]?.includes(payload.id)) {
       socket.emit('onlineError', { message: '선택할 수 없는 원입니다.' });
@@ -106,7 +108,33 @@ io.on('connection', socket => {
     if (room.selections[0] && room.selections[1]) {
       room.started = true;
       io.to(room.id).emit('onlineStart', {
-        p1: room.selections[0], p2: room.selections[1], seed: room.seed
+        p1: room.selections[0], p2: room.selections[1], seed: room.seed, round: room.round
+      });
+    }
+  });
+
+  socket.on('onlineNextReady', payload => {
+    const room = rooms.get(socket.data.roomId);
+    if (!room || payload?.room !== room.id || !room.started) return;
+    const sideIndex = socket.data.side - 1;
+    const requestedRound = Number(payload?.round);
+    if (!Number.isInteger(requestedRound) || requestedRound !== room.round + 1) return;
+    room.nextReady[sideIndex] = true;
+    socket.emit('onlineRoundWaiting');
+    if (room.nextReady[0] && room.nextReady[1]) {
+      room.round = requestedRound;
+      room.started = false;
+      room.picks = [null, null];
+      room.selections = [null, null];
+      room.nextReady = [false, false];
+      room.players.forEach((player, index) => {
+        const playerSocket = io.sockets.sockets.get(player.id);
+        if (playerSocket) {
+          playerSocket.emit('onlineNextRoundPick', {
+            round: room.round,
+            ids: shuffledUnique(player.owned).slice(0, 2)
+          });
+        }
       });
     }
   });
