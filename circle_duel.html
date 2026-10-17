@@ -40,14 +40,14 @@ body{background:radial-gradient(ellipse at 50% 25%,#ffe96a 0,#ffb72c 48%,#d87513
  <section id="homeScreen">
   <div class="homeTop"><div class="homeTrophy">🏆 <span id="homeTrophies">0</span> 트로피</div><div class="homeTrophy" id="homeUsername">⭕ 원대원</div></div>
   <div class="heroCircle" id="heroCircle">⚡</div>
-  <div style="text-align:center;font-size:clamp(20px,4vw,30px);font-weight:1000;text-shadow:0 2px #fff8;margin-bottom:14px">원대원 <span style="font-size:13px">v1.3.3</span></div>
+  <div style="text-align:center;font-size:clamp(20px,4vw,30px);font-weight:1000;text-shadow:0 2px #fff8;margin-bottom:14px">원대원 <span style="font-size:13px">v1.4.3</span></div>
   <div class="homeButtons">
    <button onclick="startMatch()">🤖 AI 매칭</button><button onclick="startOnlineMatch()">🌐 온라인 매칭</button>
    <button onclick="openHomePage('collection')">⭕ 원도감</button><button onclick="openHomePage('trophies')">🏆 트로피</button>
    <button style="grid-column:1/-1" onclick="openSettings()">⚙️ 설정</button>
   </div>
  </section>
- <section id="settingsPage" class="panel hidden" style="margin-top:14px"><h2 class="heading">⚙️ 설정</h2><p>게임 이름: 원대원</p><p>버전: 1.3.3</p><p class="muted">계정과 트로피는 현재 이 브라우저에 저장됩니다.</p><button class="secondary" onclick="closeHomePage()">메뉴로 돌아가기</button><button class="secondary" onclick="logout()">로그아웃</button></section>
+ <section id="settingsPage" class="panel hidden" style="margin-top:14px"><h2 class="heading">⚙️ 설정</h2><p>게임 이름: 원대원</p><p>버전: 1.4.3</p><p class="muted">계정과 트로피는 현재 이 브라우저에 저장됩니다.</p><button class="secondary" onclick="closeHomePage()">메뉴로 돌아가기</button><button class="secondary" onclick="logout()">로그아웃</button></section>
  <section id="page-battle" class="layout hidden">
   <div class="panel">
    <div class="fightbar"><div class="fighter"><div class="fightername" id="pName">스피디</div><div class="hpouter"><div id="pHp" class="hp"></div></div><div class="small" id="pHpText">100 / 100 HP</div></div><div class="versus">ROUND <span id="roundNum">1</span> · <span id="scoreText">0 - 0</span></div><div class="fighter right"><div class="fightername" id="eName">AI</div><div class="hpouter"><div id="eHp" class="hp"></div></div><div class="small" id="eHpText">100 / 100 HP</div></div></div>
@@ -65,7 +65,7 @@ body{background:radial-gradient(ellipse at 50% 25%,#ffe96a 0,#ffb72c 48%,#d87513
 <script>
 const ROSTER=[
 {id:'speedy',name:'스피디',hp:80,damage:1,color:'#57d8f5',unlock:0,icon:'⚡',desc:'기본 공격 피해 1, 체력 80. 궁극기 중 충돌 피해 증가량은 7이며 받는 피해가 감소한다.',ability:'궁극기 중 충돌 피해 7 · 궁극기 종료 후 쿨타임 초기화'},
-{id:'turret',name:'포맘',hp:100,damage:0,color:'#ffbd59',unlock:0,icon:'🔫',desc:'포탑을 아주 사랑한다. 7초마다 현재 위치에 포탑을 설치해 6초 동안 1초마다 직선 탄환을 발사.',ability:'7초마다 포탑 설치 · 1초마다 피해 2 · 6초 지속'},
+{id:'turret',name:'포맘',hp:100,damage:0,color:'#ffbd59',unlock:0,icon:'🔫',desc:'포탑을 아주 사랑한다. 7초마다 현재 위치에 포탑을 설치해 6초 동안 0.5초마다 직선 탄환을 발사하며 탄환 피해는 7이다.',ability:'7초마다 포탑 설치 · 0.5초마다 피해 7 · 6초 지속'},
 {id:'vampire',name:'뱀파이어',hp:95,damage:0,color:'#d58cff',unlock:50,icon:'🧛',desc:'궁극기가 충전되면 상대와 접촉할 때까지 준비 상태를 유지한다. 접촉하면 3초간 상대를 묶고 매초 4 피해와 체력 4 회복.',ability:'충전 유지 · 접촉 시 3초 속박 · 매초 피해 4 및 회복 4'},
 {id:'spider',name:'스파이더맨',hp:100,damage:0,color:'#ff627e',unlock:100,icon:'🕸️',desc:'벽에 닿으면 자신의 몸과 실제로 닿은 벽을 잇는 거미줄을 생성한다. 적이 지나가면 피해 2.',ability:'몸에서 접촉한 벽까지 거미줄 · 통과 시 피해 2'},
 {id:'piggy',name:'피기',hp:105,damage:0,color:'#f48fba',unlock:150,icon:'🐷',desc:'방망이를 좋아하는 불쌍한 돼지. 바라보는 방향으로 180° 방망이를 1초마다 휘두른다.',ability:'1초마다 전방 180° 방망이 · 피해 8'}
@@ -94,7 +94,7 @@ function startMatch(){$('homeScreen').classList.add('hidden');$('settingsPage').
 function shuffle(a){return a.sort(()=>Math.random()-.5)}
 function chooseFighter(id){if(!match||match.active)return;if(match.mode==='online-pick'){onlineSocket.emit('onlineSelect',{room:onlineRoom,id});$('pickArea').innerHTML='';$('status').textContent='선택 완료! 상대가 원을 고르는 중입니다…';return}$('game').classList.add('game-fighting');match.chosen=ROSTER.find(r=>r.id===id);match.ai=shuffle(ROSTER.slice())[0];match.active=true;match.ended=false;$('chosenSide').textContent=match.chosen.name;$('pName').textContent=match.chosen.icon+' '+match.chosen.name;$('eName').textContent='🤖 '+match.ai.name;$('matchInfo').textContent='내 원: '+match.chosen.name+' / AI 원: '+match.ai.name;startRound()}
 function startRound(){if(!match)return;match.rng=seededRand((match.seed||1)+match.round*997);match.accum=0;let p=makeFighter(match.chosen,145,200,1),e=makeFighter(match.ai,455,200,-1);match.fighters=[p,e];match.projectiles=[];match.webs=[];match.particles=[];match.time=0;match.last=0;match.active=true;match.roundDone=false;match.startHp=[p.hp,e.hp];$('roundNum').textContent=match.round;$('nextBtn').disabled=true;$('status').textContent='전투 중! 원들이 자동으로 싸웁니다.';lastTs=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
-function makeFighter(def,x,y,dir){let a=match&&match.mode==='online'?match.rng()*Math.PI*2:Math.random()*Math.PI*2;return {def,x,y,vx:Math.cos(a)*300,vy:Math.sin(a)*300,r:25,hp:def.hp,maxHp:def.hp,dir,age:0,special:0,active:0,attack:0,webCooldown:0,attached:0,attachTimer:0,dead:false,face:dir}}
+function makeFighter(def,x,y,dir){let a=match&&match.mode==='online'?match.rng()*Math.PI*2:Math.random()*Math.PI*2;return {def,x,y,vx:Math.cos(a)*300,vy:Math.sin(a)*300,r:30,hp:def.hp,maxHp:def.hp,dir,age:0,special:0,active:0,attack:0,webCooldown:0,attached:0,attachTimer:0,dead:false,face:dir}}
 function loop(ts){if(!match||!match.active)return;let elapsed=lastTs?Math.min((ts-lastTs)/1000,.1):1/60;lastTs=ts;match.accum=(match.accum||0)+elapsed;let step=1/60;while(match.accum>=step&&match.active){update(step);match.accum-=step}render();if(match.active)raf=requestAnimationFrame(loop)}
 function seededRand(seed){let a=(seed>>>0)||1;return function(){a+=0x6D2B79F5;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296}}
 let collisionAudio=null,lastCollisionSound=0;
@@ -121,13 +121,13 @@ function update(dt){let m=match;m.time+=dt;let [p,e]=m.fighters;for(let f of m.f
  if(p.hp>0&&e.hp>0){let dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy)||1;if(d<p.r+e.r){playCollisionSound(Math.min(1,Math.max(.2,Math.abs((p.vx-e.vx)*dx/d+(p.vy-e.vy)*dy/d)/650)));let nx=dx/d,ny=dy/d,over=p.r+e.r-d;p.x-=nx*over/2;p.y-=ny*over/2;e.x+=nx*over/2;e.y+=ny*over/2;let rv=(p.vx-e.vx)*nx+(p.vy-e.vy)*ny;if(rv>0){p.vx-=rv*nx*.9;p.vy-=rv*ny*.9;e.vx+=rv*nx*.9;e.vy+=rv*ny*.9}if(p.def.id==='speedy'&&p.active>0)damage(e,7);else if(p.def.damage)damage(e,p.def.damage);if(e.def.id==='speedy'&&e.active>0)damage(p,7);else if(e.def.damage)damage(p,e.def.damage);}}
  // 충돌 뒤 속도가 지나치게 줄어들면 기본 속도를 다시 회복한다. 흡혈로 붙어 있는 동안만 예외.
  for(let f of m.fighters){if(f.hp<=0||(f.def.id==='vampire'&&f.attached)||f.knockback>0)continue;let speed=Math.hypot(f.vx,f.vy);let desired=(f.def.id==='speedy'&&f.active>0)?450:330;if(speed<desired*.88){let ang=speed>1?Math.atan2(f.vy,f.vx):(f===p?0:Math.PI);f.vx=Math.cos(ang)*desired;f.vy=Math.sin(ang)*desired}}
- for(let i=m.projectiles.length-1;i>=0;i--){let b=m.projectiles[i];b.life-=dt;if(b.life<=0){m.projectiles.splice(i,1);continue}if(b.kind==='turret'){b.fire-=dt;if(b.fire<=0){b.fire=1;let t=b.owner===p?e:p,dx=t.x-b.x,dy=t.y-b.y,d=Math.hypot(dx,dy)||1;m.projectiles.push({kind:'bullet',owner:b.owner,x:b.x,y:b.y,vx:dx/d*380,vy:dy/d*380,life:2,damage:2})}}else{b.x+=b.vx*dt;b.y+=b.vy*dt;let t=b.owner===p?e:p;if(Math.hypot(t.x-b.x,t.y-b.y)<t.r+5){damage(t,b.damage);m.projectiles.splice(i,1)}}}
+ for(let i=m.projectiles.length-1;i>=0;i--){let b=m.projectiles[i];b.life-=dt;if(b.life<=0){m.projectiles.splice(i,1);continue}if(b.kind==='turret'){b.fire-=dt;if(b.fire<=0){b.fire=0.5;let t=b.owner===p?e:p,dx=t.x-b.x,dy=t.y-b.y,d=Math.hypot(dx,dy)||1;m.projectiles.push({kind:'bullet',owner:b.owner,x:b.x,y:b.y,vx:dx/d*380,vy:dy/d*380,life:2,damage:7})}}else{b.x+=b.vx*dt;b.y+=b.vy*dt;let t=b.owner===p?e:p;if(Math.hypot(t.x-b.x,t.y-b.y)<t.r+5){damage(t,b.damage);m.projectiles.splice(i,1)}}}
  for(let f of m.fighters){if(f.hp>0&&f.def.id==='piggy'){f.attack+=0;if(f.attack>=1){f.attack=0;f.swing=.38;let t=f===p?e:p,dx=t.x-f.x,dy=t.y-f.y,d=Math.hypot(dx,dy),ang=Math.atan2(dy,dx);if(d<125&&Math.abs(angleDiff(ang,f.face))<Math.PI/2){damage(t,8);let kb=520;t.vx=Math.cos(f.face)*kb;t.vy=Math.sin(f.face)*kb;t.knockback=.22;}m.particles.push({x:f.x,y:f.y,life:.22,kind:'bat',angle:f.face})}}}
  for(let w of m.webs){w.life-=dt;w.x1=w.owner.x;w.y1=w.owner.y;let t=w.owner===p?e:p;if(!w.used&&distSeg(t.x,t.y,w.x1,w.y1,w.x2,w.y2)<t.r+4){damage(t,2);w.used=true}}
  m.webs=m.webs.filter(w=>w.life>0);m.particles=m.particles.filter(x=>(x.life-=dt)>0);
  if(p.hp<=0||e.hp<=0)finishRound(p.hp>e.hp?1:e.hp>p.hp?2:0)
 }
-function damage(f,n){if(f.hp<=0)return;let actual=n;if(f.def.id==='speedy'&&f.active>0)actual*=.5;f.hp=Math.max(0,f.hp-actual)}
+function damage(f,n){if(f.hp<=0)return;playCollisionSound(Math.min(1,Math.max(.25,n/10)));let actual=n;if(f.def.id==='speedy'&&f.active>0)actual*=.5;f.hp=Math.max(0,f.hp-actual)}
 function wallTouch(f,side){if(f.def.id!=='spider'||f.webCooldown>0)return;f.webCooldown=.25;
  // 거미줄의 한쪽 끝은 스파이더맨의 몸, 다른 쪽 끝은 실제로 접촉한 벽에 고정한다.
  let x2=f.x,y2=f.y;
