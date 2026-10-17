@@ -41,10 +41,10 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 const ROSTER=[
-{id:'speedy',name:'스피디',hp:100,damage:6,color:'#57d8f5',unlock:0,icon:'⚡',desc:'처음 전장에 온 기본 원. 6초마다 5초간 빠르게 돌진하며 공격 피해 50% 감소, 충돌 피해 15.',ability:'6초마다 5초 돌진 · 피해 15 · 받는 피해 50% 감소'},
+{id:'speedy',name:'스피디',hp:100,damage:6,color:'#57d8f5',unlock:0,icon:'⚡',desc:'처음 전장에 온 기본 원. 6초마다 5초간 빠르게 돌진하며 공격 피해 50% 감소, 충돌 피해 15.',ability:'궁 종료 후 6초 충전 · 5초 돌진 · 피해 15 · 받는 피해 50% 감소'},
 {id:'turret',name:'포맘',hp:100,damage:0,color:'#ffbd59',unlock:0,icon:'🔫',desc:'포탑을 아주 사랑한다. 7초마다 현재 위치에 포탑을 설치해 6초 동안 1초마다 직선 탄환을 발사.',ability:'7초마다 포탑 설치 · 1초마다 피해 2 · 6초 지속'},
 {id:'vampire',name:'뱀파이어',hp:90,damage:0,color:'#d58cff',unlock:50,icon:'🧛',desc:'항상 굶주려 있다. 5초마다 흡혈 상태가 되어 적에게 붙으면 3초간 매초 3 피해와 회복, 이후 밀쳐낸다.',ability:'5초 충전 · 3초 흡혈 · 매초 피해 3 및 회복 3'},
-{id:'spider',name:'스파이더맨',hp:100,damage:0,color:'#ff627e',unlock:100,icon:'🕸️',desc:'도시를 지키는 영웅. 벽에 닿을 때마다 벽과 연결된 거미줄을 남기며, 적이 지나가면 피해 1.',ability:'벽에 닿으면 거미줄 생성 · 통과 시 피해 1'},
+{id:'spider',name:'스파이더맨',hp:100,damage:0,color:'#ff627e',unlock:100,icon:'🕸️',desc:'도시를 지키는 영웅. 벽에 닿으면 자신의 위치에서 경기장 안쪽으로 거미줄을 남기며, 적이 지나가면 피해 1.',ability:'벽에 닿으면 거미줄 생성 · 통과 시 피해 1'},
 {id:'piggy',name:'피기',hp:105,damage:0,color:'#f48fba',unlock:150,icon:'🐷',desc:'방망이를 좋아하는 불쌍한 돼지. 바라보는 방향으로 180° 방망이를 1초마다 휘두른다.',ability:'1초마다 전방 180° 방망이 · 피해 8'}
 ];
 let mode='login',account=null,profile=null,match=null,raf=0,lastTs=0,onlineSocket=null,onlineSide=0,onlineRoom=null,onlineSeed=1,onlineQueue=false,onlineChoices=[];
@@ -68,21 +68,23 @@ function startMatch(){if(onlineSocket&&onlineSocket.connected&&onlineQueue){onli
 function shuffle(a){return a.sort(()=>Math.random()-.5)}
 function chooseFighter(id){if(!match||match.active)return;if(match.mode==='online-pick'){onlineSocket.emit('onlineSelect',{room:onlineRoom,id});$('pickArea').innerHTML='';$('status').textContent='선택 완료! 상대가 원을 고르는 중입니다…';return}match.chosen=ROSTER.find(r=>r.id===id);match.ai=shuffle(ROSTER.slice())[0];match.active=true;match.ended=false;$('chosenSide').textContent=match.chosen.name;$('pName').textContent=match.chosen.icon+' '+match.chosen.name;$('eName').textContent='🤖 '+match.ai.name;$('matchInfo').textContent='내 원: '+match.chosen.name+' / AI 원: '+match.ai.name;startRound()}
 function startRound(){if(!match)return;match.rng=seededRand((match.seed||1)+match.round*997);match.accum=0;let p=makeFighter(match.chosen,170,240,1),e=makeFighter(match.ai,550,240,-1);match.fighters=[p,e];match.projectiles=[];match.webs=[];match.particles=[];match.time=0;match.last=0;match.active=true;match.roundDone=false;match.startHp=[p.hp,e.hp];$('roundNum').textContent=match.round;$('nextBtn').disabled=true;$('status').textContent='전투 중! 원들이 자동으로 싸웁니다.';lastTs=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
-function makeFighter(def,x,y,dir){let a=match&&match.mode==='online'?match.rng()*Math.PI*2:Math.random()*Math.PI*2;return {def,x,y,vx:Math.cos(a)*270,vy:Math.sin(a)*270,r:25,hp:def.hp,maxHp:def.hp,dir,age:0,special:0,active:0,attack:0,webCooldown:0,attached:0,attachTimer:0,dead:false,face:dir}}
+function makeFighter(def,x,y,dir){let a=match&&match.mode==='online'?match.rng()*Math.PI*2:Math.random()*Math.PI*2;return {def,x,y,vx:Math.cos(a)*300,vy:Math.sin(a)*300,r:25,hp:def.hp,maxHp:def.hp,dir,age:0,special:0,active:0,attack:0,webCooldown:0,attached:0,attachTimer:0,dead:false,face:dir}}
 function loop(ts){if(!match||!match.active)return;let elapsed=lastTs?Math.min((ts-lastTs)/1000,.1):1/60;lastTs=ts;match.accum=(match.accum||0)+elapsed;let step=1/60;while(match.accum>=step&&match.active){update(step);match.accum-=step}render();if(match.active)raf=requestAnimationFrame(loop)}
 function seededRand(seed){let a=(seed>>>0)||1;return function(){a+=0x6D2B79F5;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296}}
-function update(dt){let m=match;m.time+=dt;let [p,e]=m.fighters;for(let f of m.fighters){if(f.hp<=0)continue;f.age+=dt;f.attack+=dt;f.special+=dt;f.webCooldown-=dt;
+function update(dt){let m=match;m.time+=dt;let [p,e]=m.fighters;for(let f of m.fighters){if(f.hp<=0)continue;f.age+=dt;f.attack+=dt;f.webCooldown-=dt;
+ // 궁극기 충전은 능력 사용 중에는 진행하지 않는다. 능력이 끝난 뒤부터 다시 충전한다.
+ if(!((f.def.id==='speedy'||f.def.id==='vampire')&&f.active>0))f.special+=dt;
  let target=f===p?e:p,dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1;f.face=Math.atan2(f.vy,f.vx);
  // 이동은 상대를 추적하지 않고, 시작 때 정한 직선 방향을 유지한다.
  if(f.def.id==='speedy'){if(f.active>0){f.active-=dt;if(f.active<=0)f.active=0;}else if(f.special>=6){f.special=0;f.active=5;}}
  else if(f.def.id==='turret'&&f.special>=7){f.special=0;m.projectiles.push({kind:'turret',owner:f,x:f.x,y:f.y,life:6,fire:0,angle:f.face})}
  else if(f.def.id==='vampire'){if(f.active>0){f.active-=dt;if(d<f.r+target.r+12){f.attached=1;f.attachTimer+=dt;f.vx=0;f.vy=0;target.vx*=.96;target.vy*=.96;if(f.attachTimer>=1){f.attachTimer=0;damage(target,3);f.hp=Math.min(f.maxHp,f.hp+3);if(f.active<=0){target.vx+=(dx/d)*260;target.vy+=(dy/d)*260;f.attached=0;f.special=0;}}}else f.attached=0;}else if(f.special>=5){f.special=0;f.active=3;f.attachTimer=0;}}
- let max=f.def.id==='speedy'&&f.active>0?390:270;let sp=Math.hypot(f.vx,f.vy);if(sp>max){f.vx=f.vx/sp*max;f.vy=f.vy/sp*max}if(f.def.id==='speedy'&&f.active>0){let boost=Math.hypot(f.vx,f.vy)||1;f.vx=f.vx/boost*390;f.vy=f.vy/boost*390;}f.x+=f.vx*dt;f.y+=f.vy*dt;
+ let max=f.def.id==='speedy'&&f.active>0?420:300;let sp=Math.hypot(f.vx,f.vy);if(sp>max){f.vx=f.vx/sp*max;f.vy=f.vy/sp*max}if(f.def.id==='speedy'&&f.active>0){let boost=Math.hypot(f.vx,f.vy)||1;f.vx=f.vx/boost*420;f.vy=f.vy/boost*420;}f.x+=f.vx*dt;f.y+=f.vy*dt;
  if(f.x<f.r){f.x=f.r;f.vx=Math.abs(f.vx);wallTouch(f,'left')}if(f.x>720-f.r){f.x=720-f.r;f.vx=-Math.abs(f.vx);wallTouch(f,'right')}if(f.y<f.r){f.y=f.r;f.vy=Math.abs(f.vy);wallTouch(f,'top')}if(f.y>480-f.r){f.y=480-f.r;f.vy=-Math.abs(f.vy);wallTouch(f,'bottom')}
  }
  if(p.hp>0&&e.hp>0){let dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy)||1;if(d<p.r+e.r){let nx=dx/d,ny=dy/d,over=p.r+e.r-d;p.x-=nx*over/2;p.y-=ny*over/2;e.x+=nx*over/2;e.y+=ny*over/2;let rv=(p.vx-e.vx)*nx+(p.vy-e.vy)*ny;if(rv>0){p.vx-=rv*nx*.9;p.vy-=rv*ny*.9;e.vx+=rv*nx*.9;e.vy+=rv*ny*.9}if(p.def.id==='speedy'&&p.active>0)damage(e,15);else if(p.def.damage)damage(e,p.def.damage);if(e.def.id==='speedy'&&e.active>0)damage(p,15);else if(e.def.damage)damage(p,e.def.damage);if(p.def.id==='vampire'&&p.active>0&&!p.attached){p.attached=1;p.attachTimer=0}if(e.def.id==='vampire'&&e.active>0&&!e.attached){e.attached=1;e.attachTimer=0}}}
  // 충돌 뒤 속도가 지나치게 줄어들면 기본 속도를 다시 회복한다. 흡혈로 붙어 있는 동안만 예외.
- for(let f of m.fighters){if(f.hp<=0||(f.def.id==='vampire'&&f.attached))continue;let speed=Math.hypot(f.vx,f.vy);let desired=(f.def.id==='speedy'&&f.active>0)?390:270;if(speed<desired*.88){let ang=speed>1?Math.atan2(f.vy,f.vx):(f===p?0:Math.PI);f.vx=Math.cos(ang)*desired;f.vy=Math.sin(ang)*desired}}
+ for(let f of m.fighters){if(f.hp<=0||(f.def.id==='vampire'&&f.attached))continue;let speed=Math.hypot(f.vx,f.vy);let desired=(f.def.id==='speedy'&&f.active>0)?420:300;if(speed<desired*.88){let ang=speed>1?Math.atan2(f.vy,f.vx):(f===p?0:Math.PI);f.vx=Math.cos(ang)*desired;f.vy=Math.sin(ang)*desired}}
  for(let i=m.projectiles.length-1;i>=0;i--){let b=m.projectiles[i];b.life-=dt;if(b.life<=0){m.projectiles.splice(i,1);continue}if(b.kind==='turret'){b.fire-=dt;if(b.fire<=0){b.fire=1;let t=b.owner===p?e:p,dx=t.x-b.x,dy=t.y-b.y,d=Math.hypot(dx,dy)||1;m.projectiles.push({kind:'bullet',owner:b.owner,x:b.x,y:b.y,vx:dx/d*380,vy:dy/d*380,life:2,damage:2})}}else{b.x+=b.vx*dt;b.y+=b.vy*dt;let t=b.owner===p?e:p;if(Math.hypot(t.x-b.x,t.y-b.y)<t.r+5){damage(t,b.damage);m.projectiles.splice(i,1)}}}
  for(let f of m.fighters){if(f.hp>0&&f.def.id==='piggy'){f.attack+=0;if(f.attack>=1){f.attack=0;let t=f===p?e:p,dx=t.x-f.x,dy=t.y-f.y,d=Math.hypot(dx,dy),ang=Math.atan2(dy,dx);if(d<160&&Math.abs(angleDiff(ang,f.face))<Math.PI/2)damage(t,8);m.particles.push({x:f.x,y:f.y,life:.22,kind:'bat',angle:f.face})}}}
  for(let w of m.webs){w.life-=dt;let t=w.owner===p?e:p;if(!w.used&&distSeg(t.x,t.y,w.x1,w.y1,w.x2,w.y2)<t.r+4){damage(t,1);w.used=true}}
@@ -90,7 +92,13 @@ function update(dt){let m=match;m.time+=dt;let [p,e]=m.fighters;for(let f of m.f
  if(p.hp<=0||e.hp<=0)finishRound(p.hp>e.hp?1:e.hp>p.hp?2:0)
 }
 function damage(f,n){if(f.hp<=0)return;let actual=n;if(f.def.id==='speedy'&&f.active>0)actual*=.5;f.hp=Math.max(0,f.hp-actual)}
-function wallTouch(f,side){if(f.def.id!=='spider'||f.webCooldown>0)return;f.webCooldown=.25;let x1=f.x,y1=f.y,x2=x1,y2=y1;if(side==='left'||side==='right'){x2=x1;y2=y1+(y1<300?200:-200)}else{x2=x1+(x1<360?200:-200);y2=y1}x2=Math.max(10,Math.min(710,x2));y2=Math.max(10,Math.min(470,y2));match.webs.push({owner:f,x1,y1,x2,y2,life:8,used:false})}
+function wallTouch(f,side){if(f.def.id!=='spider'||f.webCooldown>0)return;f.webCooldown=.25;
+ // 거미줄은 벽과 벽 사이를 잇지 않고, 스파이더맨의 위치에서 경기장 안쪽으로 뻗는다.
+ let x1=f.x,y1=f.y,x2=x1,y2=y1;
+ if(side==='left'||side==='right'){x2=x1+(side==='left'?190:-190);y2=y1+(f.vy<0?-105:105)}
+ else{x2=x1+(f.vx<0?-105:105);y2=y1+(side==='top'?190:-190)}
+ x2=Math.max(10,Math.min(710,x2));y2=Math.max(10,Math.min(470,y2));
+ match.webs.push({owner:f,x1,y1,x2,y2,life:8,used:false})}
 function angleDiff(a,b){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
 function distSeg(px,py,x1,y1,x2,y2){let dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/(dx*dx+dy*dy||1)));return Math.hypot(px-(x1+t*dx),py-(y1+t*dy))}
 function finishRound(winner){if(!match||match.roundDone)return;match.roundDone=true;match.active=false;cancelAnimationFrame(raf);if(winner===1)match.score++;else if(winner===2)match.aiScore++;$('scoreText').textContent=match.score+' - '+match.aiScore;$('status').textContent=winner===1?'라운드 승리! 🎉':winner===2?'라운드 패배!':'무승부!';$('nextBtn').disabled=false;if(match.score>=2||match.aiScore>=2){match.ended=true;let won=match.score>match.aiScore;let localWon=match.mode==='online'?(match.side===1?won:!won):won;if(localWon){profile.wins++;profile.trophies+=10}else{profile.losses++;profile.trophies=Math.max(0,profile.trophies-5)}unlockCheck();persist();updateStats();renderMilestones();renderCollection();$('status').textContent=localWon?'🏆 최종 승리! 트로피 +10':'최종 패배. 트로피 -5';$('matchInfo').textContent=localWon?(match.mode==='online'?'온라인 플레이어에게 승리했습니다! +10 트로피':'AI에게 승리했습니다! +10 트로피'):(match.mode==='online'?'온라인 플레이어에게 패배했습니다. -5 트로피':'AI에게 패배했습니다. -5 트로피');$('nextBtn').textContent='새 매칭';$('nextBtn').disabled=false;$('matchBtn').disabled=false;$('onlineBtn').disabled=false;}else{$('nextBtn').textContent='다음 라운드';}}
@@ -108,7 +116,17 @@ function startOnlineMatch(){
  onlineSocket.on('onlineOpponentSelected',()=>{$('status').textContent='상대가 원을 선택했어요. 전투 준비 중…'});
  onlineSocket.on('onlineStart',data=>{onlineQueue=false;onlineSeed=data.seed;let left=ROSTER.find(r=>r.id===data.p1),right=ROSTER.find(r=>r.id===data.p2);if(!left||!right){$('status').textContent='상대 원 정보를 읽지 못했어요.';return}match={mode:'online',seed:onlineSeed,side:onlineSide,chosen:left,ai:right,round:1,score:0,aiScore:0,active:false,ended:false};$('matchBtn').disabled=true;$('onlineBtn').disabled=true;$('nextBtn').disabled=true;$('pickArea').innerHTML='';$('chosenSide').textContent=(onlineSide===1?left:right).name;$('pName').textContent=left.icon+' '+left.name;$('eName').textContent=right.icon+' '+right.name;$('matchInfo').textContent='실제 플레이어와 대전 중! '+(onlineSide===1?'당신은 왼쪽 원입니다.':'당신은 오른쪽 원입니다.');$('status').textContent='온라인 전투 시작!';startRound()});
  onlineSocket.on('onlineError',data=>{$('status').textContent=data.message||'온라인 매칭 오류';onlineQueue=false;$('matchBtn').disabled=false;$('onlineBtn').disabled=false});
- onlineSocket.on('opponentLeft',()=>{$('status').textContent='상대가 연결을 종료했어요. 온라인 매칭을 다시 시작할 수 있어요.';stopFight();$('matchBtn').disabled=false;$('onlineBtn').disabled=false;$('nextBtn').disabled=true;});
+ onlineSocket.on('opponentLeft',()=>{
+   // 상대가 전투 중 나가면 남아 있는 플레이어의 부전승으로 처리한다.
+   if(match&&match.mode==='online'&&!match.ended&&match.fighters){
+     match.active=false;match.roundDone=true;match.ended=true;cancelAnimationFrame(raf);
+     profile.wins++;profile.trophies+=10;unlockCheck();persist();updateStats();renderMilestones();renderCollection();
+     $('status').textContent='🏆 상대가 전투를 나갔습니다. 부전승! 트로피 +10';
+     $('matchInfo').textContent='상대가 연결을 종료해 부전승 처리되었습니다. +10 트로피';
+     $('nextBtn').textContent='새 매칭';$('nextBtn').disabled=false;
+   }else{$('status').textContent='상대가 매칭을 취소했어요. 다시 온라인 매칭을 시작할 수 있어요.';$('nextBtn').disabled=true;}
+   onlineQueue=false;$('matchBtn').disabled=false;$('onlineBtn').disabled=false;
+ });
  onlineSocket.on('disconnect',()=>{if(onlineQueue){$('status').textContent='서버 연결이 끊어졌어요. 서버 주소와 실행 상태를 확인해 주세요.';$('matchBtn').disabled=false;$('onlineBtn').disabled=false;onlineQueue=false}})
 }
 function resetToMenu(){if(onlineSocket){onlineSocket.emit('cancelQueue');onlineSocket.disconnect();onlineSocket=null}onlineQueue=false;stopFight();match=null;$('onlineBtn').disabled=false;$('opponentLabel').textContent='AI · 모든 원 사용 가능';$('matchBtn').disabled=false;$('nextBtn').disabled=true;$('nextBtn').textContent='다음 라운드';$('pickArea').innerHTML='';$('matchInfo').textContent='매칭을 시작하면 보유한 원 중 두 개가 무작위로 선택됩니다. 그중 하나를 골라 싸우세요.';$('status').textContent='AI 매칭을 눌러 전투를 시작하세요.';drawIdle()}
