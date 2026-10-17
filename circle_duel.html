@@ -47,7 +47,7 @@ body{background:radial-gradient(ellipse at 50% 25%,#ffe96a 0,#ffb72c 48%,#d87513
    <button style="grid-column:1/-1" onclick="openSettings()">⚙️ 설정</button>
   </div>
  </section>
- <section id="settingsPage" class="panel hidden" style="margin-top:14px"><h2 class="heading">⚙️ 설정</h2><p>게임 이름: 원대원</p><p>버전: 1.2.2</p><p class="muted">계정과 트로피는 현재 이 브라우저에 저장됩니다.</p><button class="secondary" onclick="closeHomePage()">메뉴로 돌아가기</button><button class="secondary" onclick="logout()">로그아웃</button></section>
+ <section id="settingsPage" class="panel hidden" style="margin-top:14px"><h2 class="heading">⚙️ 설정</h2><p>게임 이름: 원대원</p><p>버전: 1.2.3</p><p class="muted">계정과 트로피는 현재 이 브라우저에 저장됩니다.</p><button class="secondary" onclick="closeHomePage()">메뉴로 돌아가기</button><button class="secondary" onclick="logout()">로그아웃</button></section>
  <section id="page-battle" class="layout hidden">
   <div class="panel">
    <div class="fightbar"><div class="fighter"><div class="fightername" id="pName">스피디</div><div class="hpouter"><div id="pHp" class="hp"></div></div><div class="small" id="pHpText">100 / 100 HP</div></div><div class="versus">ROUND <span id="roundNum">1</span> · <span id="scoreText">0 - 0</span></div><div class="fighter right"><div class="fightername" id="eName">AI</div><div class="hpouter"><div id="eHp" class="hp"></div></div><div class="small" id="eHpText">100 / 100 HP</div></div></div>
@@ -58,7 +58,7 @@ body{background:radial-gradient(ellipse at 50% 25%,#ffe96a 0,#ffb72c 48%,#d87513
   </div>
   <aside class="panel"><h2 class="heading">전투 정보</h2><div class="statrow"><span>내 트로피</span><strong class="trophy" id="trophySide">0 🏆</strong></div><div class="statrow"><span>내 전적</span><strong id="recordSide">0승 0패</strong></div><div class="statrow"><span>선택한 원</span><strong id="chosenSide">미선택</strong></div><div class="statrow"><span>상대</span><strong id="opponentLabel">AI · 모든 원 사용 가능</strong></div><hr style="border-color:var(--line);margin:16px 0"><h3 style="margin:0 0 8px">이번 매칭</h3><p id="matchInfo" class="muted">매칭을 시작하면 보유한 원 중 두 개가 무작위로 선택됩니다. 그중 하나를 골라 싸우세요.</p><div id="pickArea" class="grid"></div></aside>
  </section>
- <section id="page-collection" class="panel hidden"><h2 class="heading">원 도감</h2><p class="muted">트로피를 모아 새로운 원을 해제하세요. 원의 능력은 전투 중 자동 발동합니다.</p><div id="collectionGrid" class="grid"></div></section>
+ <section id="page-collection" class="panel hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 class="heading">원 도감</h2><button class="secondary" onclick="closeHomePage()">🏠 메뉴로</button></div><p class="muted">트로피를 모아 새로운 원을 해제하세요. 원의 능력은 전투 중 자동 발동합니다.</p><div id="collectionGrid" class="grid"></div></section>
  <section id="page-trophies" class="layout hidden"><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 class="heading">🏆 트로피 보상</h2><button class="secondary" onclick="closeHomePage()">🏠 메뉴로</button></div><div id="milestones"></div></div><div class="panel"><h2 class="heading">내 기록</h2><div class="trophy" id="bigTrophy">0 🏆</div><div class="statrow"><span>승리</span><strong id="wins">0</strong></div><div class="statrow"><span>패배</span><strong id="losses">0</strong></div><div class="statrow"><span>승률</span><strong id="winrate">0%</strong></div><p class="notice">계정별 진행 상황은 이 브라우저에 저장됩니다.</p><button class="secondary" onclick="resetProgress()">진행 상황 초기화</button></div></section>
 </div>
 <script src="/socket.io/socket.io.js"></script>
