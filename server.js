@@ -119,8 +119,9 @@ io.on('connection', socket => {
     const sideIndex = socket.data.side - 1;
     const requestedRound = Number(payload?.round);
     if (!Number.isInteger(requestedRound) || requestedRound !== room.round + 1) return;
+    // Idempotent ready state: repeated taps cannot break round progression.
     room.nextReady[sideIndex] = true;
-    socket.emit('onlineRoundWaiting');
+    socket.emit('onlineRoundWaiting', { round: requestedRound, ready: true });
     if (room.nextReady[0] && room.nextReady[1]) {
       room.round = requestedRound;
       room.started = false;
@@ -129,10 +130,13 @@ io.on('connection', socket => {
       room.nextReady = [false, false];
       room.players.forEach((player, index) => {
         const playerSocket = io.sockets.sockets.get(player.id);
+        // Prepare and store each player's allowed choices on the server BEFORE
+        // notifying clients, so a fast selection can never arrive too early.
+        const ids = shuffledUnique(player.owned).slice(0, 2);
+        room.picks[index] = ids;
         if (playerSocket) {
           playerSocket.emit('onlineNextRoundPick', {
-            round: room.round,
-            ids: shuffledUnique(player.owned).slice(0, 2)
+            room: room.id, round: room.round, ids
           });
         }
       });
